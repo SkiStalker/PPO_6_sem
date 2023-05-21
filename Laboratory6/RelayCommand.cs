@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -16,6 +17,7 @@ namespace FileClientUI
     {
         readonly Action<object> _execute;
         readonly Predicate<object> _canExecute;
+        private CancellationTokenSource? cancellationTokenSource;
 
         /// <summary>
         /// Creates a new command that can always execute.
@@ -33,10 +35,7 @@ namespace FileClientUI
         /// <param name="canExecute">The execution status logic.</param>
         public RelayCommand(Action<object> execute, Predicate<object> canExecute)
         {
-            if (execute == null)
-                throw new ArgumentNullException("execute");
-
-            _execute = execute;
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
         }
 
@@ -54,7 +53,24 @@ namespace FileClientUI
 
         public async void Execute(object parameters)
         {
-            await Task.Run(() => _execute(parameters));
+            try
+            {
+                if (cancellationTokenSource != null)
+                {
+                    cancellationTokenSource.Cancel();
+                    cancellationTokenSource.Token.WaitHandle.WaitOne();
+                }
+
+                cancellationTokenSource = new CancellationTokenSource();
+                await Task.Run(() =>
+                {
+                    _execute(parameters);
+                }, cancellationTokenSource.Token);
+            }
+            catch
+            {
+                // ignored
+            }
         }
     }
 }

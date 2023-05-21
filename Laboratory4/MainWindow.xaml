@@ -101,7 +101,7 @@
                             <Button Click="ButtonBase_OnClick">Measure</Button>
                         </Grid>
                         <Grid>
-                            <Separator />
+                            <Separator/>
                         </Grid>
                         <Grid>
                             <TextBlock Text="{Binding FunctionResult}"

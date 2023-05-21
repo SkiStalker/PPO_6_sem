@@ -17,6 +17,50 @@ public class MainWindowViewModel : ObservableObject
     private PlotModel? graphModel;
     private object? matrix;
     private ICommand? loadFileCommand;
+    private string? quadraticFunction;
+    private string? hyperbolicFunction;
+    private string? quadraticDeviation;
+    private string? hyperbolicDeviation;
+
+    public string? QuadraticFunction
+    {
+        get => quadraticFunction;
+        set
+        {
+            quadraticFunction = value;
+            OnPropertyChanged("QuadraticFunction");
+        }
+    }
+
+    public string? HyperbolicFunction
+    {
+        get => hyperbolicFunction;
+        set
+        {
+            hyperbolicFunction = value;
+            OnPropertyChanged("HyperbolicFunction");
+        }
+    }
+
+    public string? QuadraticDeviation
+    {
+        get => quadraticDeviation;
+        set
+        {
+            quadraticDeviation = value;
+            OnPropertyChanged("QuadraticDeviation");
+        }
+    }
+
+    public string? HyperbolicDeviation
+    {
+        get => hyperbolicDeviation;
+        set
+        {
+            hyperbolicDeviation = value;
+            OnPropertyChanged("HyperbolicDeviation");
+        }
+    }
 
     public object? Matrix
     {
@@ -59,6 +103,8 @@ public class MainWindowViewModel : ObservableObject
                     double? maxX = null;
                     double? minY = null;
                     double? maxY = null;
+                    bool success = true;
+                    double avgDistance = 0;
 
 
                     newDataTable.Columns.Clear();
@@ -75,12 +121,16 @@ public class MainWindowViewModel : ObservableObject
                             if (double.TryParse(parts[0].Trim(), out double x) &&
                                 double.TryParse(parts[1].Trim(), out double y))
                             {
+                                if (n > 0)
+                                {
+                                    avgDistance += Math.Sqrt(Math.Pow(points[^1].X - x, 2) + Math.Pow(points[^1].Y - y, 2));
+                                }
                                 maxX = Math.Max(maxX ??= x, x);
                                 minX = Math.Min(minX ??= x, x);
                                 maxY = Math.Max(maxY ??= y, y);
                                 minY = Math.Min(minY ??= y, y);
-                                
-                                
+
+
                                 points.Add(new Point(x, y));
                                 sx4 += Math.Pow(x, 4);
                                 sx3 += Math.Pow(x, 3);
@@ -100,46 +150,82 @@ public class MainWindowViewModel : ObservableObject
                                 newDataTable.Rows.Add(newRow);
                             }
                         }
+                        else
+                        {
+                            MessageBox.Show($"Error file string {n}. The string must be in the format x:y");
+                            success = false;
+                            break;
+                        }
                     }
 
                     (double qA, double qB, double qC, double hA, double hB) =
                         CalcFunctions(sx4, sx3, sx2, sx2y, sx, sxy, sy, n, s1_x, sy_x, s1_x2);
 
+                    Func<double, double> qFunc = new Func<double, double>(x => qA * x * x + qB * x + qC);
+                    Func<double, double> hFunc = new Func<double, double>(x => hA + hB / x);
+
                     PlotModel plotModel = new PlotModel();
 
-                    LinearAxis horizontalAxis = new LinearAxis()
-                        { Position = AxisPosition.Bottom, Minimum = minX - 5 ?? -1, Maximum = maxX + 5 ?? 1, IsZoomEnabled = false, Title = "X", MajorGridlineStyle = LineStyle.Solid, MajorStep = 1};
-                    plotModel.Axes.Add(horizontalAxis);
-                    
-                    LinearAxis verticalAxis = new LinearAxis()
-                        { Position = AxisPosition.Left, Minimum = minY - 5 ?? -1, Maximum = maxY + 5 ?? 1 , IsZoomEnabled = false, Title = "Y", MajorGridlineStyle = LineStyle.Solid, MajorStep = 1};
-                    plotModel.Axes.Add(verticalAxis);
-                    
-                    plotModel.Series.Add(new FunctionSeries(x => qA * x * x + qB * x + qC, minX - 5 ?? -1,
-                        maxX + 5 ?? 1, 0.1, "Quadratic"){Color = OxyColors.Green});
-                    
-                    plotModel.Series.Add(new FunctionSeries(x => hA + hB / x, minX - 5 ?? -1,
-                        -0.1, 0.1, "Hyperbolic"){Color = OxyColors.Blue});
-                    
-                    plotModel.Series.Add(new FunctionSeries(x => hA + hB / x, 0.1,
-                        maxX + 5 ?? 1, 0.1, "Hyperbolic"){Color = OxyColors.Blue});
-
-                    LineSeries dots= new LineSeries()
+                    if (success)
                     {
-                        Color = OxyColors.Transparent,
-                        MarkerFill = OxyColors.Red,
-                        MarkerType = MarkerType.Circle,
-                        Title = "Dots"
-                    };
+                        int gridStep = (int)Math.Max(avgDistance / n , 1);
+                        LinearAxis horizontalAxis = new LinearAxis()
+                        {
+                            Position = AxisPosition.Bottom, Minimum = minX - 5 ?? -1, Maximum = maxX + 5 ?? 1,
+                            IsZoomEnabled = true, Title = "X", MajorGridlineStyle = LineStyle.Solid, MajorStep = gridStep
+                        };
+                        plotModel.Axes.Add(horizontalAxis);
 
-                    foreach (Point point in points)
-                    {
-                        dots.Points.Add(new DataPoint(point.X, point.Y));
+                        LinearAxis verticalAxis = new LinearAxis()
+                        {
+                            Position = AxisPosition.Left, Minimum = minY - 5 ?? -1, Maximum = maxY + 5 ?? 1,
+                            IsZoomEnabled = true, Title = "Y", MajorGridlineStyle = LineStyle.Solid, MajorStep = gridStep
+                        };
+                        plotModel.Axes.Add(verticalAxis);
+
+                        plotModel.Series.Add(new FunctionSeries(qFunc, minX - 5 ?? -1,
+                            maxX + 5 ?? 1, 0.1, "Quadratic") { Color = OxyColors.Green });
+
+                        plotModel.Series.Add(new FunctionSeries(hFunc, minX - 5 ?? -1,
+                            -0.1, 0.1, "Hyperbolic") { Color = OxyColors.Blue });
+
+                        plotModel.Series.Add(new FunctionSeries(x => hA + hB / x, 0.1,
+                            maxX + 5 ?? 1, 0.1, "Hyperbolic") { Color = OxyColors.Blue });
+
+                        LineSeries dots = new LineSeries()
+                        {
+                            Color = OxyColors.Transparent,
+                            MarkerFill = OxyColors.Red,
+                            MarkerType = MarkerType.Circle,
+                            Title = "Dots"
+                        };
+
+                        foreach (Point point in points)
+                        {
+                            dots.Points.Add(new DataPoint(point.X, point.Y));
+                        }
+
+                        plotModel.Series.Add(dots);
+
+
+                        HyperbolicFunction = $"{hA:F3} {(hB > 0 ? "+" : "-")} ({Math.Abs(hB):F3})/x";
+                        HyperbolicDeviation = $"{CalcDeviation(hFunc, points):F2}";
+
+                        QuadraticFunction =
+                            $"{qA:F3}*x^2 {(qB > 0 ? "+" : "-")} {Math.Abs(qB):F3}*x {(qC > 0 ? "+" : "-")} {Math.Abs(qC):F3}";
+                        QuadraticDeviation = $"{CalcDeviation(qFunc, points):F3}";
                     }
-                    plotModel.Series.Add(dots);
-                    
+                    else
+                    {
+                        newDataTable.Clear();
+                        HyperbolicFunction = "";
+                        HyperbolicDeviation = "";
+                        QuadraticFunction = "";
+                        QuadraticDeviation = "";
+                    }
+
                     GraphModel = plotModel;
-                    
+
                     Matrix = newDataTable.DefaultView;
                 }
             });
@@ -156,6 +242,16 @@ public class MainWindowViewModel : ObservableObject
         }
     }
 
+    private double CalcDeviation(Func<double, double> func, List<Point> points)
+    {
+        double res = 0;
+        foreach (Point point in points)
+        {
+            res += Math.Pow(func(point.X) - point.Y, 2);
+        }
+
+        return Math.Sqrt(res / points.Count);
+    }
     private (double, double, double, double, double) CalcFunctions(double sx4,
         double sx3,
         double sx2,

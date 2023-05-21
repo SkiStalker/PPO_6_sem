@@ -1,0 +1,128 @@
+﻿<Window x:Class="Laboratory6.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Laboratory6"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.44*" />
+            <ColumnDefinition Width="0.44*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <DataGrid Grid.Column="0" HeadersVisibility="None" RowHeaderWidth="0"
+                  CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="True"
+                  ItemsSource="{Binding Matrix1, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Margin="5">
+        </DataGrid>
+        <DataGrid Grid.Column="1" HeadersVisibility="None" RowHeaderWidth="0"
+                  CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="True"
+                  ItemsSource="{Binding Matrix2, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Margin="5">
+        </DataGrid>
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <StackPanel.Resources>
+                    <Style TargetType="{x:Type TextBlock}">
+                        <Setter Property="HorizontalAlignment" Value="Left" />
+                    </Style>
+                    <Style TargetType="{x:Type Grid}">
+                        <Setter Property="Margin" Value="10,10,10,0" />
+                        <Style.Resources>
+                            <Style TargetType="Button">
+                                <Style.Resources>
+                                    <Style TargetType="TextBlock">
+
+                                    </Style>
+                                </Style.Resources>
+                            </Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Margin" Value="0, 0, 0, 10"></Setter>
+                                <Setter Property="HorizontalAlignment" Value="Left"></Setter>
+                            </Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="HorizontalAlignment" Value="Right"></Setter>
+                            </Style>
+                        </Style.Resources>
+                    </Style>
+                </StackPanel.Resources>
+                <StackPanel>
+                    <Grid>
+                        <TextBlock Margin="0">Rows 1</TextBlock>
+                        <TextBox Width="50" Text="{Binding Rows1, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
+                    <Grid>
+                        <TextBlock Margin="0">Columns 1</TextBlock>
+                        <TextBox Width="50" Text="{Binding Columns1, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
+                    <Grid>
+                        <TextBlock Margin="0">Rows 2</TextBlock>
+                        <TextBox Width="50" Text="{Binding Rows2, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
+                    <Grid>
+                        <TextBlock Margin="0">Columns 2</TextBlock>
+                        <TextBox Width="50" Text="{Binding  Columns2, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
+                </StackPanel>
+                <Grid>
+                    <Button Command="{Binding ResizeCommand}">Resize</Button>
+                </Grid>
+                <Grid>
+                    <Separator />
+                </Grid>
+                <Grid>
+                    <Button Command="{Binding LoadFromFileCommand}">
+                        <TextBlock TextWrapping="Wrap" TextAlignment="Center">Load matrices from file</TextBlock>
+                    </Button>
+                </Grid>
+                <Grid>
+                    <Separator></Separator>
+                </Grid>
+                <Grid>
+                    <Button Command="{Binding CheckCommand}">Check</Button>
+                </Grid>
+                <Grid>
+                    <Grid.ToolTip>
+                        <ToolTip HasDropShadow="False"
+                                 Placement="Relative" HorizontalOffset="50">
+                            Checking for the presence of non-zero elements in each row of the matrix, with the largest element
+                        </ToolTip>
+                    </Grid.ToolTip>
+                    <Grid.RowDefinitions>
+                        <RowDefinition></RowDefinition>
+                        <RowDefinition></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <TextBlock TextWrapping="Wrap">Check result:</TextBlock>
+                    <TextBox Grid.Row="1" IsReadOnly="True" HorizontalAlignment="Stretch" Text="{Binding CheckResult}"></TextBox>
+                </Grid>
+                <Grid>
+                    <Separator></Separator>
+                </Grid>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition></RowDefinition>
+                        <RowDefinition></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <TextBlock TextWrapping="Wrap">Multi-threaded time:</TextBlock>
+                    <TextBox Grid.Row="1" IsReadOnly="True" HorizontalAlignment="Stretch" Text="{Binding MtTime}"></TextBox>
+                </Grid>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition></RowDefinition>
+                        <RowDefinition></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <TextBlock TextWrapping="Wrap">Single-threaded time:</TextBlock>
+                    <TextBox Grid.Row="1" IsReadOnly="True" HorizontalAlignment="Stretch" Text="{Binding StTime}"></TextBox>
+                </Grid>
+
+
+            </StackPanel>
+            </Grid>
+        </Grid>
+</Window>
