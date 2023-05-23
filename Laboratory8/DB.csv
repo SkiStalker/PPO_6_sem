@@ -1,0 +1,3 @@
+ID,FirstName,Weight,Height,Birthday
+int,str,double,double,datetime
+0,Bob,12,11.3,2000.01.01
